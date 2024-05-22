@@ -1,39 +1,60 @@
-import { useState } from 'react';
+import { useContext, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { v4 as uuidv4 } from 'uuid';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { AppContext } from '../context/AppContext';
+import { SocketContext } from '../context/SocketContext';
+import { ACTIONS, UserStatus } from '../../../common_types';
 
 export const HomePage = () => {
 
+    const location = useLocation();
     const navigate = useNavigate();
+    const { socket } = useContext(SocketContext);
+    const { currentUser, setCurrentUser, status, setStatus } = useContext(AppContext);
 
-    const [postInputs, setPostInputs] = useState({
-        roomId: '',
-        username: ''
-    });
-    
     const createNewRoom = () => {
         const uuid = uuidv4();
-        setPostInputs({
-            ...postInputs,
+        setCurrentUser(prevState => ({
+            ...prevState,
             roomId: uuid
-        });
-
-        toast.success('New Room Created!');
+        }));
+        toast.success('New Room Id Created!');
     }
 
-    const joinTheRoom = (e: React.FormEvent) => {
-        e.preventDefault();
-        if(postInputs.roomId === '' || postInputs.username === '') {
-            toast.error('Please fill all the fields');
-            return;
-        }
-        
-        // Redirect to the editor page
-        navigate(`/editor/${postInputs.roomId}`, {
-            state: {
-                username: postInputs.username
+    const copyRoomIdToClipboard = () => {
+        navigator.clipboard.writeText(currentUser.roomId);
+        toast.success('Room Id Copied to Clipboard!');
+    }
+
+    useEffect(() => {
+        if (currentUser.roomId.length > 0) return
+        if (location.state?.roomId) {
+            setCurrentUser({ ...currentUser, roomId: location.state.roomId })
+            if (currentUser.username.length === 0) {
+                toast.success("Enter your username")
             }
+        }
+    }, [currentUser, location.state?.roomId, setCurrentUser])
+
+    const joinTheRoom = (e: React.FormEvent) => {
+        console.log('Joining the room');
+        e.preventDefault();
+        if(status === UserStatus.ATTEMPTING_JOIN) return;
+        toast.loading('Joining the room...');
+        setStatus(UserStatus.ATTEMPTING_JOIN);
+        socket.emit(ACTIONS.JOIN_REQUEST, {
+            roomId: currentUser.roomId,
+            username: currentUser.username,
+        });
+    }
+
+    const handleInputChanges = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setCurrentUser({
+            ...currentUser,
+            [name]: value
         });
     }
 
@@ -42,6 +63,28 @@ export const HomePage = () => {
             joinTheRoom(e);
         }
     }
+
+    useEffect(() => {
+        if(status === UserStatus.DISCONNECTED && !socket.connected) {
+            socket.connect();
+            return;
+        }
+    
+        if (status === UserStatus.JOINED && location.state?.redirect !== true) { 
+            // Use location.state?.redirect instead of sessionStorage
+            navigate(`/editor/${currentUser.roomId}`, {
+                state: {
+                    username: currentUser.username,
+                    redirect: true, // Mark redirect in location state
+                },
+                replace: true, // Replace the current history entry 
+            });
+        } else if (status === UserStatus.JOINED && location.state?.redirect === true) {
+            // User was just redirected, no need to reconnect socket
+        }
+    }, [status, currentUser, location.state?.redirect, navigate, socket]);
+    
+
 
     return (
         <div className="flex min-h-screen w-full items-center justify-center bg-gray-100 px-4 py-12 ">
@@ -56,15 +99,26 @@ export const HomePage = () => {
                             <label htmlFor="room-id" className="block text-gray-700 text-sm font-bold mb-2">
                                 Room ID
                             </label>
-                            <input
-                                id="room-id"
-                                placeholder="Enter room id"
-                                required
-                                type="text"
-                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                value={postInputs.roomId}
-                                onChange={(e) => setPostInputs({...postInputs, roomId: e.target.value})}
-                            />
+                            <div className='flex gap-3'>
+                                <input
+                                    id="room-id"
+                                    name="roomId"
+                                    placeholder="Enter room id"
+                                    required
+                                    type="text"
+                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                                    value={currentUser.roomId}
+                                    onChange={handleInputChanges}
+                                />
+                                <button
+                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                                    type="button"
+                                    onClick={copyRoomIdToClipboard}
+                                    hidden={currentUser.roomId === ''}
+                                >
+                                    <ContentCopyIcon/>
+                                </button>
+                            </div>
                         </div>
                         <div className="mb-4">
                             <label htmlFor="username" className="block text-gray-700 text-sm font-bold mb-2">
@@ -72,18 +126,20 @@ export const HomePage = () => {
                             </label>
                             <input
                                 id="username"
+                                name="username"
                                 placeholder="Enter your username"
                                 required
                                 type="text"
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                value={postInputs.username}
-                                onChange={(e) => setPostInputs({...postInputs, username: e.target.value})}
+                                value={currentUser.username}
+                                onChange={handleInputChanges}
                                 onKeyDown={handleInputEnter}
                             />
                         </div>
                         <button
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                             type="submit"
+                            disabled={status === UserStatus.ATTEMPTING_JOIN} 
                         >
                             Join Room
                         </button>

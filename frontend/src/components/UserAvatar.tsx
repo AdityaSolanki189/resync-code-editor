@@ -1,21 +1,23 @@
-export function UserAvatar({ name }: Readonly<{ name: string }>) {
+import Avatar from "react-avatar";
 
-    const getInitials = (fullName: string) => {
-      const names = fullName.split(' ');
+interface UserAvatarProps {
+    name: string;
+}
 
-      return names.length >= 2 
-        ? names[0][0].toUpperCase() + names[names.length - 1][0].toUpperCase()
-        : name[0].toUpperCase();
-    };
+export function UserAvatar({ name } : Readonly<UserAvatarProps>) {
   
     return (
-        <div
-            className={`relative inline-flex items-center justify-center w-12 h-12 overflow-hidden bg-gray-600 rounded-md dark:bg-gray-600`}
-        >
-            <div>
-                <span className="text-xs text-gray-600 dark:text-gray-300">
-                    {getInitials(name)}
-                </span>
+        <div className={`relative inline-flex items-center justify-center`}>   
+            <div className="flex justify-center flex-col items-center">
+                <div className="flex justify-center flex-col items-center w-12 h-12 overflow-hidden bg-gray-600 rounded-md">
+                    <Avatar name={name} size="45" unstyled={true}/>
+                </div>
+                <div>
+                    <span className="text-base text-gray-300">
+                        {/* {name.slice(0, 10) + "..."} */}
+                        {name}
+                    </span>
+                </div>
             </div>
         </div>
     );

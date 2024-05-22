@@ -1,26 +1,40 @@
 import { CopyAllRounded, LogoutRounded, MenuOpenRounded } from '@mui/icons-material';
 import {UserAvatar} from './UserAvatar';
-import { useState } from 'react';
-
-interface IUser {
-    socketId: string;
-    username: string;
-}
+import { useContext } from 'react';
+import { AppContext } from '../context/AppContext';
+import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { SocketContext } from '../context/SocketContext';
+import { UserStatus } from '../../../common_types';
 
 export default function Sidebar() {
-
-    const [users, setUsers] = useState<IUser[]>([
-        {socketId: '1', username: 'Carol Newman'},
-        {socketId: '2', username: 'Jane Doe'},
-        {socketId: '3', username: 'Leo Mills'},
-        {socketId: '4', username: 'Olivia Parker'},
-        {socketId: '5', username: 'Quinn Robertson'},
-        {socketId: '6', username: 'Sam Taylor'}
-    ]);
+    
+    const navigate = useNavigate();
+    const { users, setStatus } = useContext(AppContext); 
+    const { socket } = useContext(SocketContext);
 
     const showConnectedUsers = () => {
-        return users.map((user, index) => {
-            return <UserAvatar key={index} name={user.username} />;
+        return users.map((user) => {
+            return <UserAvatar key={user.username} name={user.username} />;
+        });
+    }
+
+    const copyUrl = () => {
+        const url = window.location.href;
+        try {
+            navigator.clipboard.writeText(url);
+            toast.success('URL Copied to Clipboard!');
+        } catch (error) {
+            toast.error('Failed to copy URL to Clipboard!');
+            console.log('Failed to copy: ', error);
+        }
+    }
+
+    const leaveRoom = () => {
+        socket.disconnect();
+        setStatus(UserStatus.DISCONNECTED);
+        navigate("/", {
+            replace: true
         });
     }
 
@@ -44,7 +58,7 @@ export default function Sidebar() {
             </div>
 
             <div className="flex-1 justify-around overflow-y-auto pl-5">
-                <div className="justify-around grid grid-cols-3 gap-4"> 
+                <div className="justify-around grid grid-cols-2 gap-4"> 
                     {showConnectedUsers()}
                 </div>
             </div>
@@ -52,11 +66,11 @@ export default function Sidebar() {
 
             <div className="border-t border-gray-800 px-4 py-4">
                 <div className="grid gap-2">
-                    <button className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"> 
+                    <button className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" onClick={copyUrl}> 
                         <CopyAllRounded className="h-4 w-4 mr-2" />
                         Copy Room ID
                     </button>
-                    <button className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                    <button className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={leaveRoom}>
                         <LogoutRounded className="h-4 w-4 mr-2" />
                         Leave Room
                     </button>
