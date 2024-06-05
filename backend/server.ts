@@ -29,6 +29,15 @@ const getRoomId = (socketId: string) => {
 	return user.roomId;
 }
 
+function getUserBySocketId(socketId: string): IClient | null {
+	const user = userSocketMap.find((user) => user.socketId === socketId)
+	if (!user) {
+		console.error("User not found for socket ID:", socketId)
+		return null
+	}
+	return user
+}
+
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
     console.log('a user connected', socket.id);
 
@@ -81,24 +90,28 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         io.to(socketId).emit(ACTIONS.SYNC_CODE, { code });
     });
 
-    socket.on(ACTIONS.CODE_UPDATED, ({ code, roomId }) => {
+    socket.on(ACTIONS.CODE_UPDATED, ({ code }) => {
+        const user = getUserBySocketId(socket.id);
+        if(!user) return;
+        const roomId = user.roomId;
         socket.broadcast.to(roomId).emit(ACTIONS.CODE_UPDATED, { code });
     });
 
     // Typing Actions
-    socket.on(ACTIONS.TYPING_START, ({ cursorPosition, roomId }) => { // Include roomId in the event
+    socket.on(ACTIONS.TYPING_START, ({ cursorPosition }) => {
         console.log('====================================');
-        console.log('Typing Start:', cursorPosition, roomId);
+        console.log('Typing Start:', cursorPosition, socket.id);
         console.log('====================================');
-        userSocketMap = userSocketMap.map(user => 
-            user.socketId === socket.id
-                ? { ...user, cursorPosition, typing: true }
-                : user
-        );
-    
-        socket.broadcast.to(roomId).emit(ACTIONS.TYPING_START, { 
-            user: userSocketMap.find(user => user.socketId === socket.id)!
+        userSocketMap = userSocketMap.map(user => {
+            if (user.socketId === socket.id) {
+                return { ...user, typing: true, cursorPosition };
+            }
+            return user;
         });
+        const user = getUserBySocketId(socket.id);
+        if(!user) return;
+        const roomId = user.roomId;
+        socket.broadcast.to(roomId).emit(ACTIONS.TYPING_START, { user });
     });
 
     socket.on(ACTIONS.TYPING_PAUSE, () => {
@@ -111,9 +124,9 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
             }
             return user;
         });
-        const user = userSocketMap.find(user => user.socketId === socket.id);
-        const roomId = user?.roomId;
-        if(roomId === undefined || user === undefined) return;
+        const user = getUserBySocketId(socket.id);
+        if(!user) return;
+        const roomId = user.roomId;
         socket.broadcast.to(roomId).emit(ACTIONS.TYPING_PAUSE, { user });
     });
 });

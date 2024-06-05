@@ -57,8 +57,8 @@ export interface ServerToClientEvents {
 export interface ClientToServerEvents {
     [ACTIONS.JOIN_REQUEST] : (data: { roomId: string; username: string }) => void;
     [ACTIONS.SYNC_CODE]: (data: { code: ICode, socketId: string }) => void;
-    [ACTIONS.CODE_UPDATED]: (data: { code: ICode, roomId: string }) => void;
-    [ACTIONS.TYPING_START]: (data: { cursorPosition: number, roomId: string }) => void;
+    [ACTIONS.CODE_UPDATED]: (data: { code: ICode }) => void;
+    [ACTIONS.TYPING_START]: (data: { cursorPosition: number }) => void;
     [ACTIONS.TYPING_PAUSE]: () => void;
     [ACTIONS.USER_ONLINE]: (data: { socketId: string }) => void;
     [ACTIONS.USER_OFFLINE]: (data: { socketId: string }) => void;
