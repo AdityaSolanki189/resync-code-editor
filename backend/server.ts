@@ -22,7 +22,11 @@ const getUsersInRoom = (roomId: string) => {
 
 const getRoomId = (socketId: string) => {
     const user = userSocketMap.find(user => user.socketId === socketId);
-    return user?.roomId;
+    if (!user?.roomId) {
+		console.error("Room ID is undefined for socket ID:", socketId)
+		return null
+	}
+	return user.roomId;
 }
 
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
@@ -44,8 +48,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
             typing: false,
             socketId: socket.id,
             code: {
-                content: ""..
-                ,
+                content: "",
             },
             status: UserStatus.ONLINE,
         };
