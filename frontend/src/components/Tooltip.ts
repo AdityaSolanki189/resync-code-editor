@@ -1,36 +1,28 @@
-import { showTooltip, EditorView } from "@codemirror/view"
 import { StateField } from "@codemirror/state"
+import { EditorView, showTooltip } from "@codemirror/view"
 import { IClient } from "../../../common_types"
-import { EditorState } from "@uiw/react-codemirror"
-
-interface ITooltipData {
-    pos: number
-    above: boolean
-    strictSide: boolean
-    arrow: boolean
-    create: () => { dom: HTMLElement }
-}
 
 export function tooltipField(users: IClient[]) {
     return StateField.define({
-        create: (state) => getCursorTooltips(state, users),
+        create: () => getCursorTooltips(users),
         update(tooltips, tr) {
             if (!tr.docChanged && !tr.selection) return tooltips
-            return getCursorTooltips(tr.state, users)
+            return getCursorTooltips(users)
         },
-        provide: (f: StateField<ITooltipData[]>) => showTooltip.computeN([f], (state: EditorState) => {
-            return state.field(f);
-        }),
+        provide: (f) => showTooltip.computeN([f], (state) => state.field(f)),
     })
 }
 
-export function getCursorTooltips(state: EditorState, users: IClient[]): ITooltipData[] {
-    return users.map((user): ITooltipData | null => {
-        if (!user.typing || user.cursorPosition === undefined) {
+export function getCursorTooltips(users: IClient[]) {
+    return users.map((user) => {
+        if (!user.typing) {
             return null
         }
-        const text = user.username
+        let text = user.username
         const pos = user.cursorPosition
+        if (user) {
+            text = user.username
+        }
 
         return {
             pos,
@@ -44,19 +36,19 @@ export function getCursorTooltips(state: EditorState, users: IClient[]): IToolti
                 return { dom }
             },
         }
-    }).filter((tooltip): tooltip is ITooltipData => tooltip !== null);
+    })
 }
 
 export const cursorTooltipBaseTheme = EditorView.baseTheme({
     ".cm-tooltip.cm-tooltip-cursor": {
-        backgroundColor: "#57b",
+        backgroundColor: "#66b",
         color: "white",
         border: "none",
         padding: "2px 7px",
         borderRadius: "4px",
         zIndex: "10",
         "& .cm-tooltip-arrow:before": {
-            borderTopColor: "#57b",
+            borderTopColor: "#66b",
         },
         "& .cm-tooltip-arrow:after": {
             borderTopColor: "transparent",

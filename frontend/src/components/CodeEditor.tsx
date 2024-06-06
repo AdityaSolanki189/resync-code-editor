@@ -1,26 +1,32 @@
 import CodeMirror, { ViewUpdate } from '@uiw/react-codemirror';
-import { useContext, useState } from "react";
+import { useContext, useMemo, useState } from "react";
 import { AppSettingsContext } from '../context/AppSettingsContext';
 import { LanguageName, langNames, loadLanguage } from "@uiw/codemirror-extensions-langs";
 import Select from './Select';
 import { editorThemes } from '../utils/themes';
 import toast from 'react-hot-toast';
 import { SocketContext } from '../context/SocketContext';
-import { ACTIONS } from '../../../common_types';
+import { ACTIONS, ICode } from '../../../common_types';
 import { CodeContext } from '../context/CodeContext';
 import useWindowDimensions from '../hooks/useWindowsDimensions';
 import { AppContext } from '../context/AppContext';
+import { hyperLink } from "@uiw/codemirror-extensions-hyper-link"
+import { color } from "@uiw/codemirror-extensions-color"
+import { cursorTooltipBaseTheme, tooltipField } from "./Tooltip"
 
 type ThemeKeys = keyof typeof editorThemes;
 
 export const CodeEditor = () => {
 
     const { socket } = useContext(SocketContext);
-    const { currentUser } = useContext(AppContext);
+    const { currentUser, users } = useContext(AppContext);
     const { tabHeight } = useWindowDimensions();
     const { theme, language, fontSize, setLanguage, setFontSize, setTheme } = useContext(AppSettingsContext);
     const {code, setCode } = useContext(CodeContext);
-    const [timeOut, setTimeOut] = useState<NodeJS.Timeout | undefined>(undefined);
+    const [timeOut, setTimeOut] = useState(setTimeout(() => {}, 0))
+    const filteredUsers = users.filter(
+        (u) => u.username !== currentUser.username,
+    )
 
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setLanguage(e.target.value);
@@ -34,37 +40,50 @@ export const CodeEditor = () => {
         setTheme(e.target.value);
     }
 
-    const onCodeChange = (value: string, viewUpdate: ViewUpdate) => {
-        setCode({ content: value });
-        socket.emit(ACTIONS.CODE_UPDATED, { code, roomId: currentUser.roomId});
+    const onCodeChange = (value: string, view: ViewUpdate) => {
+        if(!code) return;
+        const version = code.version + 1;
+        const updatedCode: ICode = { 
+            ...code,
+            version,
+            content: value,
+        };
+        
+        setCode(updatedCode);
+
+        socket.emit(ACTIONS.CODE_UPDATED, { code: updatedCode });
+        const cursorPosition = view.state.selection.main.head;
+        socket.emit(ACTIONS.TYPING_START, { cursorPosition }); 
     
-        const cursorPosition = viewUpdate.state?.selection?.main?.head;
-        if (cursorPosition !== undefined) {
-            socket.emit(ACTIONS.TYPING_START, { cursorPosition, roomId: currentUser.roomId }); 
-        }
-    
-        // Clear existing timeout if there is one
-        if (timeOut) {
-            clearTimeout(timeOut);
-        }
+        clearTimeout(timeOut);
     
         // Set a new timeout
         const newTimeout = setTimeout(() => {
             socket.emit(ACTIONS.TYPING_PAUSE);
-            setTimeOut(undefined); // Reset timeout state after it fires
         }, 1000);
         setTimeOut(newTimeout); 
     };
 
-    const getExtensions = () => {
-        const langExt = loadLanguage(language.toLowerCase() as LanguageName);
-        if (!langExt) {
-            toast.error("Syntax Highlighting not available for this language");
-            return []; 
+    const getExtensions = useMemo(() => {
+        const extensions = [
+            color,
+            hyperLink,
+            tooltipField(filteredUsers),
+            cursorTooltipBaseTheme,
+        ]
+        const langExt = loadLanguage(language.toLowerCase() as LanguageName)
+        if (langExt) {
+            extensions.push(langExt)
+        } else {
+            toast.error(
+                "Syntax highlighting is unavailable for this language. Please adjust the editor settings; it may be listed under a different name.",
+                {
+                    duration: 5000,
+                },
+            )
         }
-        return [langExt.extension]; 
-    };
-
+        return extensions
+    }, [filteredUsers, language])
     
     return (
         <div className="h-screen w-full overflow-hidden">
@@ -119,8 +138,8 @@ export const CodeEditor = () => {
                     placeholder="your code here..."
                     theme={editorThemes[theme as ThemeKeys]}
                     onChange={onCodeChange}
-                    value={code.content}
-                    extensions={getExtensions()}
+                    value={code?.content}
+                    extensions={getExtensions}
                     minHeight="100%"
                     maxWidth="100vw"
                     style={{
