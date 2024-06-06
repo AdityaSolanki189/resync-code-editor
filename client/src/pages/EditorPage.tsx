@@ -1,6 +1,6 @@
 import Sidebar from "../components/Sidebar";
 import { useContext, useEffect } from "react";
-import { ACTIONS, UserStatus } from "../../../common_types";
+import { ACTIONS, UserStatus } from "@adi_solanki21/resync_common_module";
 import { AppContext } from "../context/AppContext";
 import { CodeEditor } from "../components/CodeEditor";
 import { SocketContext } from "../context/SocketContext";
@@ -35,11 +35,11 @@ export const EditorPage = () => {
                 cursorPosition: 0
             };
             setCurrentUser(user);
-            socket.emit(ACTIONS.JOIN_REQUEST, user);
+            socket.emit(ACTIONS.Enum["join-request"], user);
         }
     }, [currentUser, location.state, navigate, roomId, setCurrentUser, socket, status]);
 
-    if (status === UserStatus.CONNECTION_FAILED) {
+    if (status === UserStatus.Enum["connection-failed"]) {
         return <ConnectionStatusPage />
     }
 

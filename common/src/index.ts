@@ -11,7 +11,11 @@ export const UserStatus = z.enum([
   "disconnected",
 ]);
 
-export const MessageType = z.enum(["SUCCESS", "ERROR"]);
+export type UserStatusType = z.infer<typeof UserStatus>;
+
+export const Message = z.enum(["SUCCESS", "ERROR"]);
+
+export type MessageType = z.infer<typeof Message>;
 
 export const ACTIONS = z.enum([
   "join-request",
@@ -27,13 +31,15 @@ export const ACTIONS = z.enum([
   "username-exists",
 ]);
 
+export type ActionType = z.infer<typeof ACTIONS>;
+
 // Interfaces converted to zod schemas
 export const codeSchema = z.object({
   version: z.number(),
   content: z.string(),
 });
 
-export type codeType = z.infer<typeof codeSchema>;
+export type ICode = z.infer<typeof codeSchema>;
 
 export const clientSchema = z.object({
   username: z.string(),
@@ -45,7 +51,7 @@ export const clientSchema = z.object({
   code: codeSchema.optional(),
 });
 
-export type clientType = z.infer<typeof clientSchema>;
+export type IClient = z.infer<typeof clientSchema>;
 
 // Events converted to zod schemas
 export const ServerToClientEventsSchema = z.object({

@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { MessageType } from '../../common_types';
+import { MessageType } from '@adi_solanki21/resync_common_module';
 
 export const formatMessage = (username: string, message: string, type: MessageType) => {
     return {

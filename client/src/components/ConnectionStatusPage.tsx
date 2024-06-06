@@ -20,7 +20,7 @@ const ConnectionError = () => {
 
     return (
         <>
-            <span className="whitespace-break-spaces text-lg font-medium text-slate-300">
+            <span className="whitespace-break-spaces text-lg font-medium text-slate-500">
                 Oops! Something went wrong. Please try again
             </span>
             <div className="flex flex-wrap justify-center gap-4">

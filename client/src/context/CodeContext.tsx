@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
-import { ACTIONS, IClient, ICode } from "../../../common_types";
+import { ACTIONS, IClient, ICode } from "@adi_solanki21/resync_common_module";
 import { SocketContext } from "./SocketContext";
 import { AppContext } from "./AppContext";
 import toast from "react-hot-toast";
@@ -24,7 +24,7 @@ export const CodeProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (!code) {
                 return;
             }
-            socket.emit(ACTIONS.SYNC_CODE, { 
+            socket.emit(ACTIONS.Enum["sync-code"], { 
                 code, 
                 socketId: user.socketId
             });
@@ -44,14 +44,14 @@ export const CodeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     useEffect(() => {
-        socket.on(ACTIONS.USER_JOINED, handleUserJoined);
-        socket.once(ACTIONS.SYNC_CODE, handleCodeSync);
-        socket.on(ACTIONS.CODE_UPDATED, handleCodeSync);
+        socket.on(ACTIONS.Enum["user-joined"], handleUserJoined);
+        socket.once(ACTIONS.Enum["sync-code"], handleCodeSync);
+        socket.on(ACTIONS.Enum["code-update"], handleCodeSync);
 
         return () => {
-            socket.off(ACTIONS.USER_JOINED, handleUserJoined);
-            socket.off(ACTIONS.SYNC_CODE, handleCodeSync);
-            socket.off(ACTIONS.CODE_UPDATED, handleCodeSync);
+            socket.off(ACTIONS.Enum["user-joined"], handleUserJoined);
+            socket.off(ACTIONS.Enum["sync-code"], handleCodeSync);
+            socket.off(ACTIONS.Enum["code-update"], handleCodeSync);
         };
     }, [socket, handleUserJoined, handleCodeSync]);
 

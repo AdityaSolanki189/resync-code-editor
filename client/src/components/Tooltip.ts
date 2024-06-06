@@ -1,6 +1,6 @@
 import { StateField } from "@codemirror/state"
 import { EditorView, showTooltip } from "@codemirror/view"
-import { IClient } from "../../../common_types"
+import { IClient } from "@adi_solanki21/resync_common_module"
 
 export function tooltipField(users: IClient[]) {
     return StateField.define({

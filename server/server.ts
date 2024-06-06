@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
 import cors from 'cors';
-import { ACTIONS, ClientToServerEvents, IClient, MessageType, ServerToClientEvents, UserStatus } from "../common_types";
+import { ACTIONS, ClientToServerEvents, IClient, MessageType, ServerToClientEvents, UserStatus } from '@adi_solanki21/resync_common_module'
 
 const app = express();
 app.use(cors());
@@ -41,12 +41,12 @@ function getUserBySocketId(socketId: string): IClient | null {
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
     console.log('a user connected', socket.id);
 
-    socket.on(ACTIONS.JOIN_REQUEST, ({ roomId, username }) => {
+    socket.on(ACTIONS.Enum["join-request"], ({ roomId, username }) => {
         console.log('join_room:', username, roomId);
 
         const isUsernameExists = userSocketMap.find(user => user.username === username);
         if (isUsernameExists) {
-            io.to(socket.id).emit(ACTIONS.USERNAME_EXISTS);
+            io.to(socket.id).emit(ACTIONS.Enum["username-exists"]);
             return;
         }
 
@@ -60,17 +60,17 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
                 version: 0,
                 content: "",
             },
-            status: UserStatus.ONLINE,
+            status: UserStatus.Enum["online"],
         };
 
         userSocketMap.push(user);
         console.log('userSocketMap:', userSocketMap);
 
         socket.join(roomId);
-        socket.broadcast.to(roomId).emit(ACTIONS.USER_JOINED, { user });
+        socket.broadcast.to(roomId).emit(ACTIONS.Enum["user-joined"], { user });
     
         const users = getUsersInRoom(roomId);
-        io.to(socket.id).emit(ACTIONS.JOIN_ACCEPTED, { user, users });
+        io.to(socket.id).emit(ACTIONS.Enum["join-accepted"], { user, users });
     });
 
     socket.on("disconnecting", () => {
@@ -81,25 +81,25 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         
         if(roomId === undefined || user === undefined) return;
 
-        socket.broadcast.to(roomId).emit(ACTIONS.USER_DISCONNECTED, { user });
+        socket.broadcast.to(roomId).emit(ACTIONS.Enum["user-disconnected"], { user });
         userSocketMap = userSocketMap.filter((u) => u.socketId !== socket.id);
         socket.leave(roomId);
     });      
     
     // Code Actions
-    socket.on(ACTIONS.SYNC_CODE, ({ code, socketId }) => {
-        io.to(socketId).emit(ACTIONS.SYNC_CODE, { code });
+    socket.on(ACTIONS.Enum["sync-code"], ({ code, socketId }) => {
+        io.to(socketId).emit(ACTIONS.Enum["sync-code"], { code });
     });
 
-    socket.on(ACTIONS.CODE_UPDATED, ({ code }) => {
+    socket.on(ACTIONS.Enum["code-update"], ({ code }) => {
         const user = getUserBySocketId(socket.id);
         if(!user) return;
         const roomId = user.roomId;
-        socket.broadcast.to(roomId).emit(ACTIONS.CODE_UPDATED, { code });
+        socket.broadcast.to(roomId).emit(ACTIONS.Enum["code-update"], { code });
     });
 
     // Typing Actions
-    socket.on(ACTIONS.TYPING_START, ({ cursorPosition }) => {
+    socket.on(ACTIONS.Enum["typing-start"], ({ cursorPosition }) => {
         console.log('====================================');
         console.log('Typing Start:', cursorPosition, socket.id);
         console.log('====================================');
@@ -112,10 +112,10 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         const user = getUserBySocketId(socket.id);
         if(!user) return;
         const roomId = user.roomId;
-        socket.broadcast.to(roomId).emit(ACTIONS.TYPING_START, { user });
+        socket.broadcast.to(roomId).emit(ACTIONS.Enum["typing-start"], { user });
     });
 
-    socket.on(ACTIONS.TYPING_PAUSE, () => {
+    socket.on(ACTIONS.Enum["typing-pause"], () => {
         userSocketMap = userSocketMap.map(user => {
             if(user.socketId === socket.id) {
                 return {
@@ -128,7 +128,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
         const user = getUserBySocketId(socket.id);
         if(!user) return;
         const roomId = user.roomId;
-        socket.broadcast.to(roomId).emit(ACTIONS.TYPING_PAUSE, { user });
+        socket.broadcast.to(roomId).emit(ACTIONS.Enum["typing-pause"], { user });
     });
 });
 
