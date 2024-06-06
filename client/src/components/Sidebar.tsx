@@ -6,7 +6,7 @@ import { AppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { SocketContext } from '../context/SocketContext';
-import { UserStatus } from '../../../common_types';
+import { UserStatus } from '@adi_solanki21/resync_common_module';
 
 export default function Sidebar() {
     
@@ -44,7 +44,7 @@ export default function Sidebar() {
 
     const leaveRoom = () => {
         socket.disconnect();
-        setStatus(UserStatus.DISCONNECTED);
+        setStatus(UserStatus.Enum["disconnected"]);
         navigate("/", {
             replace: true
         });

@@ -2,7 +2,7 @@ import { EditorView, ViewPlugin, ViewUpdate } from "@codemirror/view"
 import { Text, ChangeSet } from "@codemirror/state"
 import { Update, receiveUpdates, sendableUpdates, collab, getSyncedVersion } from "@codemirror/collab"
 import { Socket } from "socket.io-client"
-import { MessageType } from "../../../common_types";
+import { MessageType, Message } from "@adi_solanki21/resync_common_module";
 
 interface ServerMessage {
     sender: string;
@@ -27,7 +27,7 @@ function pushUpdates(
         socket.emit('pushUpdates', { roomId, version, updates: JSON.stringify(updates) });
 
         socket.once('message', function (message: ServerMessage) { // Listen for 'message' event
-            if (message.type === MessageType.SUCCESS) {
+            if (message.type === Message.Enum["SUCCESS"]) {
                 resolve(message); 
             } else {
                 reject(message); // Reject the promise on error
@@ -92,7 +92,7 @@ export const peerExtension = (socket: Socket, startVersion: number, roomId: stri
             try {
                 const responseMessage: ServerMessage = await pushUpdates(socket, version, updates, roomId);
                 // Handle success or specific errors here if needed
-                if (responseMessage.type !== MessageType.SUCCESS) {
+                if (responseMessage.type !== Message.Enum["SUCCESS"]) {
                     // Handle error message (e.g., display notification, log error)
                     console.error("Push updates failed:", responseMessage.message);
                 }

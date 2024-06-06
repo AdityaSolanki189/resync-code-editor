@@ -6,7 +6,7 @@ import Select from './Select';
 import { editorThemes } from '../utils/themes';
 import toast from 'react-hot-toast';
 import { SocketContext } from '../context/SocketContext';
-import { ACTIONS, ICode } from '../../../common_types';
+import { ACTIONS, ICode } from '@adi_solanki21/resync_common_module';
 import { CodeContext } from '../context/CodeContext';
 import useWindowDimensions from '../hooks/useWindowsDimensions';
 import { AppContext } from '../context/AppContext';
@@ -51,15 +51,15 @@ export const CodeEditor = () => {
         
         setCode(updatedCode);
 
-        socket.emit(ACTIONS.CODE_UPDATED, { code: updatedCode });
+        socket.emit(ACTIONS.Enum["code-update"], { code: updatedCode });
         const cursorPosition = view.state.selection.main.head;
-        socket.emit(ACTIONS.TYPING_START, { cursorPosition }); 
+        socket.emit(ACTIONS.Enum["typing-start"], { cursorPosition }); 
     
         clearTimeout(timeOut);
     
         // Set a new timeout
         const newTimeout = setTimeout(() => {
-            socket.emit(ACTIONS.TYPING_PAUSE);
+            socket.emit(ACTIONS.Enum["typing-pause"]);
         }, 1000);
         setTimeOut(newTimeout); 
     };
