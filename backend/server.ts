@@ -57,6 +57,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
             typing: false,
             socketId: socket.id,
             code: {
+                version: 0,
                 content: "",
             },
             status: UserStatus.ONLINE,

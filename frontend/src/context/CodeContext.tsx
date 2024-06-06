@@ -3,27 +3,27 @@ import { ACTIONS, IClient, ICode } from "../../../common_types";
 import { SocketContext } from "./SocketContext";
 import { AppContext } from "./AppContext";
 import toast from "react-hot-toast";
+import initialCode from "../utils/initialCode";
 
 export interface ICodeContext {
-    code: ICode;
-    setCode: React.Dispatch<React.SetStateAction<ICode>>;
+    code: ICode | null;
+    setCode: (code: ICode | null ) => void;
 }
 
 export const CodeContext = createContext<ICodeContext>(undefined!);
 
 export const CodeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { socket } = useContext(SocketContext);
-    const [code, setCode] = useState<ICode>(
-        {
-            content: "Hello World!",
-        }
-    );
+    const [code, setCode] = useState<ICode | null>(initialCode);
     const { setUsers } = useContext(AppContext);
     
     const handleUserJoined = useCallback(
         ({ user } : { user: IClient })  => {
             toast.success(`${user.username} joined the room`);
 
+            if (!code) {
+                return;
+            }
             socket.emit(ACTIONS.SYNC_CODE, { 
                 code, 
                 socketId: user.socketId
@@ -44,8 +44,8 @@ export const CodeProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     useEffect(() => {
-        socket.once(ACTIONS.SYNC_CODE, handleCodeSync);
         socket.on(ACTIONS.USER_JOINED, handleUserJoined);
+        socket.once(ACTIONS.SYNC_CODE, handleCodeSync);
         socket.on(ACTIONS.CODE_UPDATED, handleCodeSync);
 
         return () => {

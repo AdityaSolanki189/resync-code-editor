@@ -1,13 +1,15 @@
-import React, { createContext, useState, useMemo, Dispatch, SetStateAction } from "react";
+import React, { createContext, useState, useMemo } from "react";
 import { IClient, UserStatus } from "../../../common_types";
 
 export interface IAppData {
     users: IClient[];
-    setUsers: Dispatch<SetStateAction<IClient[]>>;
+    setUsers: (
+        users: IClient[] | ((users: IClient[]) => IClient[]),
+    ) => void;
     status: UserStatus;
-    setStatus: Dispatch<SetStateAction<UserStatus>>;
+    setStatus: (status: UserStatus) => void;
     currentUser: IClient;
-    setCurrentUser: Dispatch<SetStateAction<IClient>>;
+    setCurrentUser: (user: IClient) => void;
 }
 
 export const AppContext = createContext<IAppData>(undefined!);

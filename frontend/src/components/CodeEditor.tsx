@@ -6,7 +6,7 @@ import Select from './Select';
 import { editorThemes } from '../utils/themes';
 import toast from 'react-hot-toast';
 import { SocketContext } from '../context/SocketContext';
-import { ACTIONS } from '../../../common_types';
+import { ACTIONS, ICode } from '../../../common_types';
 import { CodeContext } from '../context/CodeContext';
 import useWindowDimensions from '../hooks/useWindowsDimensions';
 import { AppContext } from '../context/AppContext';
@@ -40,14 +40,20 @@ export const CodeEditor = () => {
         setTheme(e.target.value);
     }
 
-    const onCodeChange = (value: string, viewUpdate: ViewUpdate) => {
-        setCode({ content: value });
-        socket.emit(ACTIONS.CODE_UPDATED, { code });
-    
-        const cursorPosition = viewUpdate.state?.selection?.main?.head;
-        if (cursorPosition !== undefined) {
-            socket.emit(ACTIONS.TYPING_START, { cursorPosition }); 
-        }
+    const onCodeChange = (value: string, view: ViewUpdate) => {
+        if(!code) return;
+        const version = code.version + 1;
+        const updatedCode: ICode = { 
+            ...code,
+            version,
+            content: value,
+        };
+        
+        setCode(updatedCode);
+
+        socket.emit(ACTIONS.CODE_UPDATED, { code: updatedCode });
+        const cursorPosition = view.state.selection.main.head;
+        socket.emit(ACTIONS.TYPING_START, { cursorPosition }); 
     
         clearTimeout(timeOut);
     

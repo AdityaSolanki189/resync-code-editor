@@ -9,6 +9,7 @@ export interface IClient {
 }
 
 export interface ICode {
+    version: number;
     content: string;
 }
 

@@ -16,10 +16,7 @@ export const HomePage = () => {
 
     const createNewRoom = () => {
         const uuid = uuidv4();
-        setCurrentUser(prevState => ({
-            ...prevState,
-            roomId: uuid
-        }));
+        setCurrentUser({ ...currentUser, roomId: uuid });
         toast.success('New Room Id Created!');
     }
 
