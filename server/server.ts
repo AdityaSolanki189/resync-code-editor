@@ -1,8 +1,8 @@
+import { ACTIONS, ClientToServerEvents, IClient, ICode, ServerToClientEvents, UserStatus } from '@adi_solanki21/resync_common_module';
+import cors from 'cors';
 import express from 'express';
 import { createServer } from 'http';
 import { Server, Socket } from 'socket.io';
-import cors from 'cors';
-import { ACTIONS, ClientToServerEvents, IClient, MessageType, ServerToClientEvents, UserStatus } from '@adi_solanki21/resync_common_module'
 
 const app = express();
 app.use(cors());
@@ -41,7 +41,7 @@ function getUserBySocketId(socketId: string): IClient | null {
 io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
     console.log('a user connected', socket.id);
 
-    socket.on(ACTIONS.Enum["join-request"], ({ roomId, username }) => {
+    socket.on(ACTIONS.Enum["join-request"], ({ roomId, username }: { roomId: string; username: string }) => {
         console.log('join_room:', username, roomId);
 
         const isUsernameExists = userSocketMap.find(user => user.username === username);
@@ -87,11 +87,11 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     });      
     
     // Code Actions
-    socket.on(ACTIONS.Enum["sync-code"], ({ code, socketId }) => {
+    socket.on(ACTIONS.Enum["sync-code"], ({ code, socketId }: { code: ICode; socketId: string }) => {
         io.to(socketId).emit(ACTIONS.Enum["sync-code"], { code });
     });
 
-    socket.on(ACTIONS.Enum["code-update"], ({ code }) => {
+    socket.on(ACTIONS.Enum["code-update"], ({ code }: { code: ICode }) => {
         const user = getUserBySocketId(socket.id);
         if(!user) return;
         const roomId = user.roomId;
@@ -99,7 +99,7 @@ io.on('connection', (socket: Socket<ClientToServerEvents, ServerToClientEvents>)
     });
 
     // Typing Actions
-    socket.on(ACTIONS.Enum["typing-start"], ({ cursorPosition }) => {
+    socket.on(ACTIONS.Enum["typing-start"], ({ cursorPosition }: { cursorPosition: number}) => {
         console.log('====================================');
         console.log('Typing Start:', cursorPosition, socket.id);
         console.log('====================================');
