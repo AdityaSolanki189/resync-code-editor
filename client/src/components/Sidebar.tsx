@@ -1,11 +1,12 @@
 import { CopyAllRounded, LogoutRounded, MenuOpenRounded } from '@mui/icons-material';
+import ShareIcon from '@mui/icons-material/Share';
 import {UserAvatar} from './UserAvatar';
 import { useContext } from 'react';
 import { AppContext } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { SocketContext } from '../context/SocketContext';
-import { UserStatus } from '../../../common_types';
+import { UserStatus } from '@adi_solanki21/resync_common_module';
 
 export default function Sidebar() {
     
@@ -30,9 +31,20 @@ export default function Sidebar() {
         }
     }
 
+    const copyRoomId = () => {
+        const roomId = users[0].roomId;
+        try {
+            navigator.clipboard.writeText(roomId);
+            toast.success('Room ID Copied to Clipboard!');
+        } catch (error) {
+            toast.error('Failed to copy Room ID to Clipboard!');
+            console.log('Failed to copy: ', error);
+        }
+    }
+
     const leaveRoom = () => {
         socket.disconnect();
-        setStatus(UserStatus.DISCONNECTED);
+        setStatus(UserStatus.Enum["disconnected"]);
         navigate("/", {
             replace: true
         });
@@ -57,8 +69,8 @@ export default function Sidebar() {
                 </div>
             </div>
 
-            <div className="flex-1 justify-around overflow-y-auto pl-5">
-                <div className="justify-around grid grid-cols-2 gap-4"> 
+            <div className="flex-1 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-4"> 
                     {showConnectedUsers()}
                 </div>
             </div>
@@ -66,10 +78,16 @@ export default function Sidebar() {
 
             <div className="border-t border-gray-800 px-4 py-4">
                 <div className="grid gap-2">
-                    <button className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded" onClick={copyUrl}> 
-                        <CopyAllRounded className="h-4 w-4 mr-2" />
-                        Copy Room ID
-                    </button>
+                    <div className="flex gap-2">
+                        <button className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-2 rounded" onClick={copyRoomId}> 
+                            <CopyAllRounded className="h-4 w-4 mr-2" />
+                            RoomId
+                        </button>
+                        <button className="w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-2 px-2 rounded" onClick={copyUrl}>
+                            <ShareIcon className="h-4 w-4 mr-2" />
+                            Share
+                        </button>
+                    </div>
                     <button className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={leaveRoom}>
                         <LogoutRounded className="h-4 w-4 mr-2" />
                         Leave Room

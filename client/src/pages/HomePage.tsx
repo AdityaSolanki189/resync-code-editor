@@ -5,7 +5,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { AppContext } from '../context/AppContext';
 import { SocketContext } from '../context/SocketContext';
-import { ACTIONS, UserStatus } from '../../../common_types';
+import { ACTIONS, UserStatus } from '@adi_solanki21/resync_common_module';
 
 export const HomePage = () => {
 
@@ -38,10 +38,10 @@ export const HomePage = () => {
     const joinTheRoom = (e: React.FormEvent) => {
         console.log('Joining the room');
         e.preventDefault();
-        if(status === UserStatus.ATTEMPTING_JOIN) return;
+        if(status === UserStatus.Enum["attempting-join"]) return;
         toast.loading('Joining the room...');
-        setStatus(UserStatus.ATTEMPTING_JOIN);
-        socket.emit(ACTIONS.JOIN_REQUEST, {
+        setStatus(UserStatus.Enum["attempting-join"]);
+        socket.emit(ACTIONS.Enum["join-request"], {
             roomId: currentUser.roomId,
             username: currentUser.username,
         });
@@ -62,12 +62,12 @@ export const HomePage = () => {
     }
 
     useEffect(() => {
-        if(status === UserStatus.DISCONNECTED && !socket.connected) {
+        if(status === UserStatus.Enum["disconnected"] && !socket.connected) {
             socket.connect();
             return;
         }
     
-        if (status === UserStatus.JOINED && location.state?.redirect !== true) { 
+        if (status === UserStatus.Enum["joined"] && location.state?.redirect !== true) { 
             // Use location.state?.redirect instead of sessionStorage
             navigate(`/editor/${currentUser.roomId}`, {
                 state: {
@@ -76,7 +76,7 @@ export const HomePage = () => {
                 },
                 replace: true, // Replace the current history entry 
             });
-        } else if (status === UserStatus.JOINED && location.state?.redirect === true) {
+        } else if (status === UserStatus.Enum["joined"] && location.state?.redirect === true) {
             // User was just redirected, no need to reconnect socket
         }
     }, [status, currentUser, location.state?.redirect, navigate, socket]);
@@ -136,7 +136,7 @@ export const HomePage = () => {
                         <button
                             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
                             type="submit"
-                            disabled={status === UserStatus.ATTEMPTING_JOIN} 
+                            disabled={status === UserStatus.Enum["attempting-join"]} 
                         >
                             Join Room
                         </button>
